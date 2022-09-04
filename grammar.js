@@ -38,8 +38,6 @@ module.exports = grammar({
     programbody: ($) =>
       seq(repeat($.import_), choice(repeat1($.funcdef), $.query)),
 
-    // imports: ($) => seq($.imports, $.import_),
-
     import_: ($) =>
       choice(
         seq(
