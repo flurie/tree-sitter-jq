@@ -1,202 +1,341 @@
+/* These are based on the precedence order in gojq */
+const PREC = {
+  // %nonassoc tokFuncDefPost tokTermPost
+  FUNCDEF_TERM: 1,
+  // %right '|'
+  PIPE: 2,
+  // %left ','
+  COMMA: 3,
+  // %right tokAltOp
+  TOKALTOP: 4,
+  // %nonassoc tokUpdateOp
+  TOKUPDATEOP: 5,
+  // %left tokOrOp
+  TOKOROP: 6,
+  // %left tokAndOp
+  TOKANDOP: 7,
+  // %nonassoc tokCompareOp
+  TOKCOMPAREOP: 8,
+  // %left '+' '-'
+  MATH_LOW: 9,
+  // %left '*' '/' '%'
+  MATH_HIGH: 10,
+  // %nonassoc tokAs tokIndex '.' '?' tokEmptyCatch
+  DOT: 11,
+  // %nonassoc '[' tokTry tokCatch
+  SQUARE: 12,
+};
+
 module.exports = grammar({
   name: "jq",
-
   word: ($) => $.keyword,
-
+  extras: ($) => [$.comment, /\s/],
   rules: {
-    program: ($) =>
-      prec.left(
-        1,
-        choice(
-          seq(optional($.module), repeat($.import_), repeat($.func_def)),
-          seq(optional($.module), repeat($.import_), repeat($.exp))
-        )
-      ),
-    module: ($) => seq("module", $.exp, ";"),
-    // this is replaced with a repeat (0 or more) at the top level
-    // _imports: ($) => seq($.import, $.imports),
+    program: ($) => seq(optional($.moduleheader), $.programbody),
+
+    moduleheader: ($) => seq("module", $.constobject, ";"),
+
+    programbody: ($) =>
+      seq(repeat($.import_), choice(repeat1($.funcdef), $.query)),
+
+    // imports: ($) => seq($.imports, $.import_),
+
     import_: ($) =>
-      choice(seq($.import_what, ";"), seq($.import_what, $.exp, ";")),
-    import_what: ($) =>
       choice(
-        seq("import", $.import_from, "as", "$", $._IDENT),
-        seq("import", $.import_from, "as", $._IDENT)
-      ),
-    import_from: ($) => $.string,
-    // this is replaced with a repeat (0 or more) at the top level
-    // _func_defs: ($) => seq($.func_def, $.func_defs),
-    func_def: ($) =>
-      choice(
-        seq("def", $._IDENT, ":", $.exp, ";"),
-        seq("def", $._IDENT, "(", repeat1($.param), ")", ":", $.exp, ";")
-      ),
-    // this is replaced with a repeat (0 or more) in the func_def
-    // _params: ($) => choice($.param, seq($.params, ";", $.param)),
-    param: ($) => choice(seq("$", $._IDENT), $._IDENT),
-    exp: ($) =>
-      prec.left(
-        2,
-        choice(
-          seq($.func_def, $.exp),
-          seq($.term, "as", $.pattern, "|", $.exp),
-          seq("reduce", $.term, "as", $.pattern, "(", $.exp, ";", $.exp, ")"),
-          seq(
-            "foreach",
-            $.term,
-            "as",
-            $.pattern,
-            "(",
-            $.exp,
-            ";",
-            $.exp,
-            ";",
-            $.exp,
-            ")"
-          ),
-          seq("foreach", $.term, "as", $.pattern, "(", $.exp, ";", $.exp, ")"),
-          seq("if", $.exp, "then", $.exp, $.else_body),
-          seq("try", $.exp, "catch", $.exp),
-          seq("try", $.exp),
-          seq("label", "$", $._IDENT, "|", $.exp),
-          seq($.exp, "?"),
-          seq($.exp, "=", $.exp),
-          seq($.exp, "or", $.exp),
-          seq($.exp, "and", $.exp),
-          seq($.exp, "//", $.exp),
-          seq($.exp, "//=", $.exp),
-          seq($.exp, "|=", $.exp),
-          seq($.exp, alias("|", $.pipe), $.exp),
-          seq($.exp, ",", $.exp),
-          seq($.exp, "+", $.exp),
-          seq($.exp, "+=", $.exp),
-          seq("-", $.exp),
-          seq($.exp, "-", $.exp),
-          seq($.exp, "-=", $.exp),
-          seq($.exp, "*", $.exp),
-          seq($.exp, "*=", $.exp),
-          seq($.exp, "/", $.exp),
-          seq($.exp, "%", $.exp),
-          seq($.exp, "/=", $.exp),
-          seq($.exp, "%=", $.exp),
-          seq($.exp, "==", $.exp),
-          seq($.exp, "!=", $.exp),
-          seq($.exp, "<", $.exp),
-          seq($.exp, ">", $.exp),
-          seq($.exp, "<=", $.exp),
-          seq($.exp, ">=", $.exp),
-          $.term
-        )
-      ),
-    pattern: ($) =>
-      choice(
-        seq("$", $._IDENT),
-        seq("[", $.array_pats, "]"),
-        seq("{", $.obj_pats, "}")
-      ),
-    array_pats: ($) => choice($.pattern, seq($.array_pats, ",", $.pattern)),
-    obj_pats: ($) => choice($.obj_pat, seq($.obj_pats, ",", $.obj_pat)),
-    obj_pat: ($) =>
-      choice(
-        seq("$", $._IDENT),
-        seq($._IDENT, ":", $.pattern),
-        seq($.keyword, ":", $.pattern),
-        seq($.string, ":", $.pattern),
-        seq("(", $.exp, ")", ":", $.pattern)
-      ),
-    else_body: ($) =>
-      choice(
-        seq("elif", $.exp, "then", $.exp, $.else_body),
-        seq("else", $.exp, "end")
-      ),
-    term: ($) =>
-      prec.right(
-        1,
-        choice(
-          ".",
-          "..",
-          seq("break", "$", $._IDENT),
-          seq($.term, $._FIELD, optional("?")),
-          seq($._FIELD, optional("?")),
-          seq($.term, ".", $.string),
-          seq(".", $.string),
-          seq($.term, ".", $.string),
-          seq(".", $.string),
-          seq($.term, "[", $.exp, "]", optional("?")),
-          seq($.term, "[", "]", optional("?")),
-          seq($.term, "[", $.exp, ":", $.exp, "]", optional("?")),
-          seq($.term, "[", $.exp, ":", "]", optional("?")),
-          seq($.term, "[", ":", $.exp, "]", optional("?")),
-          $._LITERAL,
+        seq(
+          "import",
           $.string,
-          $._FORMAT,
-          seq("(", $.exp, ")"),
-          seq("[", $.exp, "]"),
-          seq("[", "]"),
-          seq("{", $.mk_dict, "}"),
-          seq("$", "__loc__"),
-          seq("$", $._IDENT),
-          $._IDENT,
-          seq($._IDENT, "(", $.args, ")")
+          "as",
+          $._tokIdentVariable,
+          optional($.constobject),
+          ";"
+        ),
+        seq("include", $.string, optional($.constobject), ";")
+      ),
+
+    funcdef: ($) =>
+      seq("def", $.identifier, optional($.funcdefargs), ":", $.query, ";"),
+
+    funcdefargs: ($) =>
+      seq("(", $._tokIdentVariable, repeat(seq(";", $._tokIdentVariable)), ")"),
+
+    _tokIdentVariable: ($) => choice($.identifier, $.variable),
+
+    query: ($) =>
+      prec.right(
+        choice(
+          prec(PREC.FUNCDEF_TERM, seq($.funcdef, $.query)),
+          field(
+            "chained_query",
+            prec(PREC.FUNCDEF_TERM, seq($.query, "|", $.query))
+          ),
+          field(
+            "chained_binding",
+            prec(PREC.DOT, seq($.binding, "|", $.query))
+          ),
+          field(
+            "reduce",
+            prec(
+              PREC.DOT,
+              seq(
+                "reduce",
+                $._term,
+                "as",
+                $._pattern,
+                "(",
+                $.query,
+                ";",
+                $.query,
+                ")"
+              )
+            )
+          ),
+          field(
+            "foreach_1",
+            prec(
+              PREC.DOT,
+              seq(
+                "foreach",
+                $._term,
+                "as",
+                $._pattern,
+                "(",
+                $.query,
+                ";",
+                $.query,
+                ")"
+              )
+            )
+          ),
+          field(
+            "foreach_2",
+            prec(
+              PREC.DOT,
+              seq(
+                "foreach",
+                $._term,
+                "as",
+                $._pattern,
+                "(",
+                $.query,
+                ";",
+                $.query,
+                ";",
+                $.query,
+                ")"
+              )
+            )
+          ),
+          field(
+            "if_statement",
+            seq(
+              "if",
+              $.query,
+              "then",
+              $.query,
+              repeat($.elif),
+              optional($.else),
+              "end"
+            )
+          ),
+          field(
+            "try_catch",
+            seq(
+              prec(PREC.SQUARE, "try"),
+              $.query,
+              prec(PREC.DOT, optional($.trycatch))
+            )
+          ),
+          field("label", seq("label", $.variable, "|", $.query)),
+          field("optional", prec(PREC.SQUARE, seq($.query, "?"))),
+          field(
+            "comma_sep_query",
+            prec.left(PREC.COMMA, seq($.query, ",", $.query))
+          ),
+          field(
+            "alternative",
+            prec(PREC.TOKALTOP, seq($.query, "//", $.query))
+          ),
+          field("update", seq($.query, $.tokUpdateOp, $.query)),
+          field(
+            "boolean_or",
+            prec.left(PREC.TOKOROP, seq($.query, "or", $.query))
+          ),
+          field("boolean_and", seq($.query, "and", $.query)),
+          field("compare", seq($.query, $._tokCompareOp, $.query)),
+          field(
+            "math",
+            prec.left(PREC.MATH_LOW, seq($.query, $._tokMathLow, $.query))
+          ),
+          field(
+            "math",
+            prec.left(PREC.MATH_HIGH, seq($.query, $._tokMathHigh, $.query))
+          ),
+          field("term", prec(PREC.FUNCDEF_TERM, $._term))
         )
       ),
-    args: ($) => choice($.arg, seq($.args, ";", $.arg)),
-    arg: ($) => $.exp,
-    mk_dict: ($) => choice($.mk_dict_pair, seq($.mk_dict_pair, ",", $.mk_dict)),
-    mk_dict_pair: ($) =>
+
+    binding: ($) => seq($._term, "as", $._bindpatterns),
+    _bindpatterns: ($) => seq($._pattern, repeat(seq("//?", $._pattern))),
+    _pattern: ($) =>
       choice(
-        seq($._IDENT, ":", $.exp_d),
-        seq($.keyword, ":", $.exp_d),
-        seq($.string, ":", $.exp_d),
-        $.string,
-        seq("$", $._IDENT),
-        $._IDENT,
-        seq("(", $.exp, ")", ":", $.exp_d)
+        seq($.variable),
+        seq("[", $.arraypatterns, "]"),
+        seq("{", $.objectpatterns, "}")
       ),
-    exp_d: ($) =>
-      prec.left(choice(seq($.exp_d, "|", $.exp_d), seq("-", $.exp_d), $.term)),
+    arraypatterns: ($) => seq($._pattern, repeat(seq(",", $._pattern))),
+    objectpatterns: ($) =>
+      seq($.objectpattern, repeat(seq(",", $.objectpattern))),
+    objectpattern: ($) =>
+      seq(
+        choice($.objectkey, $.string, seq("(", $.query, ")")),
+        ":",
+        $._pattern
+      ),
+    _term: ($) =>
+      choice(
+        ".",
+        alias("..", $.recurse),
+        $.index,
+        field("array_access", prec(PREC.SQUARE, seq(".", $.suffix))),
+        field("object_param", seq(".", $.string)),
+        "null",
+        "true",
+        "false",
+        field("function", seq($.funcname, optional(seq("(", $.args, ")")))),
+        $.variable,
+        $.number,
+        $.format,
+        $.string,
+        field("query_within_parens", seq("(", $.query, ")")),
+        field("unary_plus", prec.left(seq("+", $._term))),
+        field("unary_minus", prec.left(seq("-", $._term))),
+        field("empty_object", seq("{", "}")),
+        field("object", seq("{", $.objectkeyvals, "}")),
+        field("object_2", seq("{", $.objectkeyvals, ",", "}")),
+        field("empty_array", seq("[", "]")),
+        field("array", seq("[", $.query, "]")),
+        field("break_statement", seq("break", $.variable)),
+        field("term_with_object_access", seq($._term, $.index)),
+        prec(PREC.SQUARE, seq($._term, $.suffix)),
+        seq($._term, "?"),
+        prec(PREC.SQUARE, seq($._term, ".", $.suffix)),
+        seq($._term, ".", $.string)
+      ),
+
+    funcname: ($) => $._IDENT,
+
+    suffix: ($) =>
+      choice(
+        seq("[", "]"),
+        seq("[", $.query, "]"),
+        seq("[", $.query, ":", "]"),
+        seq("[", ":", $.query, "]"),
+        seq("[", $.query, ":", $.query, "]")
+      ),
+
+    args: ($) => choice($.query, seq($.args, ";", $.query)),
+
+    elif: ($) => seq("elif", $.query, "then", $.query),
+
+    else: ($) => seq("else", $.query),
+
+    trycatch: ($) => prec.right(PREC.SQUARE, seq("catch", $.query)),
+
+    objectkeyvals: ($) =>
+      choice($.objectkeyval, seq($.objectkeyvals, ",", $.objectkeyval)),
+
+    objectkeyval: ($) =>
+      choice(
+        seq($.objectkey, ":", $.objectval),
+        seq($.string, ":", $.objectval),
+        seq("(", $.query, ")", ":", $.objectval),
+        $.objectkey,
+        $.string
+      ),
+
+    objectkey: ($) => choice($.identifier, $.variable, $.keyword),
+
+    objectval: ($) => seq($._term, repeat(seq("|", $._term))),
+
+    constterm: ($) =>
+      choice(
+        $.constobject,
+        $.constarray,
+        $.number,
+        $.string,
+        "null",
+        "true",
+        "false"
+      ),
+
+    constobject: ($) =>
+      seq(
+        "{",
+        optional(
+          seq($.constobjectkeyval, repeat(seq(",", $.constobjectkeyval)))
+        ),
+        "}"
+      ),
+
+    constobjectkeyval: ($) =>
+      seq(choice($.identifier, $.keyword, $.string), ":", $.constterm),
+
+    constarray: ($) =>
+      seq("[", optional(seq($.constterm, repeat(seq(",", $.constterm)))), "]"),
+
     keyword: ($) =>
       /module|import|include|def|as|if|then|else|elif|end|and|or|reduce|foreach|try|catch|label|break|__loc__/,
-    string: ($) =>
-      choice(seq('"', $._QQSTRING, '"'), seq($._FORMAT, '"', $._QQSTRING, '"')),
-    _IDENT: ($) => /([a-zA-Z_][a-zA-Z_0-9]*::)*[a-zA-Z_][a-zA-Z_0-9]*/,
-    _FIELD: ($) => /\.[a-zA-Z_][a-zA-Z_0-9]*/,
+    string: ($) => choice($._QQSTRING, seq($.format, $._QQSTRING)),
+    identifier: ($) => /([a-zA-Z_][a-zA-Z_0-9]*::)*[a-zA-Z_][a-zA-Z_0-9]*/,
+    variable: ($) => /\$[a-zA-Z_][a-zA-Z_0-9]*/,
+    _tokMathLow: ($) => choice("+", "-"),
+    _tokMathHigh: ($) => choice("*", "/", "%"),
+    tokUpdateOp: ($) => choice("|=", "+=", "-=", "*=", "/=", "//=", "%=", "="),
+    _tokCompareOp: ($) => choice("==", "!=", ">=", "<=", ">", "<"),
+    format: ($) => /"@"[a-zA-Z0-9_]+/,
+    index: ($) => seq(".", $.identifier),
+    number: ($) => /[\+\-]?[0-9]+/,
+    // NOTE: this stuff comes from the json BNF, which may or may not be worth implementing
+
+    // {
+    //   const hex_literal = seq(choice("0x", "0X"), /[\da-fA-F]+/);
+
+    //   const decimal_digits = /\d+/;
+    //   const signed_integer = seq(optional(choice("-", "+")), decimal_digits);
+    //   const exponent_part = seq(choice("e", "E"), signed_integer);
+
+    //   const binary_literal = seq(choice("0b", "0B"), /[0-1]+/);
+
+    //   const octal_literal = seq(choice("0o", "0O"), /[0-7]+/);
+
+    //   const decimal_integer_literal = seq(
+    //     optional(choice("-", "+")),
+    //     choice("0", seq(/[1-9]/, optional(decimal_digits))),
+    //   );
+
+    //   const decimal_literal = choice(
+    //     seq(
+    //       decimal_integer_literal,
+    //       ".",
+    //       optional(decimal_digits),
+    //       optional(exponent_part),
+    //     ),
+    //     seq(".", decimal_digits, optional(exponent_part)),
+    //     seq(decimal_integer_literal, optional(exponent_part)),
+    //   );
+
+    //   return token(
+    //     choice(hex_literal, decimal_literal, binary_literal, octal_literal),
+    //   );
+    // },
     _QQSTRING: ($) => choice(seq('"', '"'), seq('"', $._string_content, '"')),
-    _LITERAL: ($) => {
-      const hex_literal = seq(choice("0x", "0X"), /[\da-fA-F]+/);
-
-      const decimal_digits = /\d+/;
-      const signed_integer = seq(optional(choice("-", "+")), decimal_digits);
-      const exponent_part = seq(choice("e", "E"), signed_integer);
-
-      const binary_literal = seq(choice("0b", "0B"), /[0-1]+/);
-
-      const octal_literal = seq(choice("0o", "0O"), /[0-7]+/);
-
-      const decimal_integer_literal = seq(
-        optional(choice("-", "+")),
-        choice("0", seq(/[1-9]/, optional(decimal_digits)))
-      );
-
-      const decimal_literal = choice(
-        seq(
-          decimal_integer_literal,
-          ".",
-          optional(decimal_digits),
-          optional(exponent_part)
-        ),
-        seq(".", decimal_digits, optional(exponent_part)),
-        seq(decimal_integer_literal, optional(exponent_part))
-      );
-
-      return token(
-        choice(hex_literal, decimal_literal, binary_literal, octal_literal)
-      );
-    },
-    _FORMAT: ($) => /"@"[a-zA-Z0-9_]+/,
     _string_content: ($) =>
       repeat1(choice(token.immediate(/[^\\"\n]+/), $._escape_sequence)),
 
     _escape_sequence: ($) =>
       token.immediate(seq("\\", /(\"|\\|\/|b|f|n|r|t|u)/)),
+    _IDENT: ($) => /([a-zA-Z_][a-zA-Z_0-9]*::)*[a-zA-Z_][a-zA-Z_0-9]*/,
+    comment: ($) => token(prec(-10, /#.*/)),
   },
 });
