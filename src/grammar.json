@@ -524,7 +524,7 @@
                     "members": [
                       {
                         "type": "SYMBOL",
-                        "name": "trycatch"
+                        "name": "catch"
                       },
                       {
                         "type": "BLANK"
@@ -643,7 +643,7 @@
                 },
                 {
                   "type": "SYMBOL",
-                  "name": "tokUpdateOp"
+                  "name": "_tokUpdateOp"
                 },
                 {
                   "type": "SYMBOL",
@@ -1525,7 +1525,7 @@
         }
       ]
     },
-    "trycatch": {
+    "catch": {
       "type": "PREC_RIGHT",
       "value": 12,
       "content": {
@@ -1901,7 +1901,7 @@
         }
       ]
     },
-    "tokUpdateOp": {
+    "_tokUpdateOp": {
       "type": "CHOICE",
       "members": [
         {

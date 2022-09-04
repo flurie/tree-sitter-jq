@@ -143,7 +143,7 @@ module.exports = grammar({
             seq(
               prec(PREC.SQUARE, "try"),
               $.query,
-              prec(PREC.DOT, optional($.trycatch))
+              prec(PREC.DOT, optional($.catch))
             )
           ),
           field("label", seq("label", $.variable, "|", $.query)),
@@ -156,7 +156,7 @@ module.exports = grammar({
             "alternative",
             prec(PREC.TOKALTOP, seq($.query, "//", $.query))
           ),
-          field("update", seq($.query, $.tokUpdateOp, $.query)),
+          field("update", seq($.query, $._tokUpdateOp, $.query)),
           field(
             "boolean_or",
             prec.left(PREC.TOKOROP, seq($.query, "or", $.query))
@@ -240,7 +240,7 @@ module.exports = grammar({
 
     else: ($) => seq("else", $.query),
 
-    trycatch: ($) => prec.right(PREC.SQUARE, seq("catch", $.query)),
+    catch: ($) => prec.right(PREC.SQUARE, seq("catch", $.query)),
 
     objectkeyvals: ($) =>
       choice($.objectkeyval, seq($.objectkeyvals, ",", $.objectkeyval)),
@@ -289,9 +289,10 @@ module.exports = grammar({
     string: ($) => choice($._QQSTRING, seq($.format, $._QQSTRING)),
     identifier: ($) => /([a-zA-Z_][a-zA-Z_0-9]*::)*[a-zA-Z_][a-zA-Z_0-9]*/,
     variable: ($) => /\$[a-zA-Z_][a-zA-Z_0-9]*/,
+    // TODO maybe move these directly into where they are used?
     _tokMathLow: ($) => choice("+", "-"),
     _tokMathHigh: ($) => choice("*", "/", "%"),
-    tokUpdateOp: ($) => choice("|=", "+=", "-=", "*=", "/=", "//=", "%=", "="),
+    _tokUpdateOp: ($) => choice("|=", "+=", "-=", "*=", "/=", "//=", "%=", "="),
     _tokCompareOp: ($) => choice("==", "!=", ">=", "<=", ">", "<"),
     format: ($) => /"@"[a-zA-Z0-9_]+/,
     index: ($) => seq(".", $.identifier),

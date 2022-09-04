@@ -588,6 +588,21 @@
     }
   },
   {
+    "type": "catch",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "query",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "constarray",
     "named": true,
     "fields": {},
@@ -2514,16 +2529,16 @@
         "required": false,
         "types": [
           {
+            "type": "catch",
+            "named": true
+          },
+          {
             "type": "query",
             "named": true
           },
           {
             "type": "try",
             "named": false
-          },
-          {
-            "type": "trycatch",
-            "named": true
           }
         ]
       },
@@ -2752,12 +2767,40 @@
         "required": false,
         "types": [
           {
+            "type": "%=",
+            "named": false
+          },
+          {
+            "type": "*=",
+            "named": false
+          },
+          {
+            "type": "+=",
+            "named": false
+          },
+          {
+            "type": "-=",
+            "named": false
+          },
+          {
+            "type": "//=",
+            "named": false
+          },
+          {
+            "type": "/=",
+            "named": false
+          },
+          {
+            "type": "=",
+            "named": false
+          },
+          {
             "type": "query",
             "named": true
           },
           {
-            "type": "tokUpdateOp",
-            "named": true
+            "type": "|=",
+            "named": false
           }
         ]
       }
@@ -2799,26 +2842,6 @@
     "children": {
       "multiple": true,
       "required": false,
-      "types": [
-        {
-          "type": "query",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "tokUpdateOp",
-    "named": true,
-    "fields": {}
-  },
-  {
-    "type": "trycatch",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
       "types": [
         {
           "type": "query",
