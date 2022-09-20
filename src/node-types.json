@@ -2825,11 +2825,15 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "types": [
         {
           "type": "format",
+          "named": true
+        },
+        {
+          "type": "query",
           "named": true
         }
       ]
@@ -2919,10 +2923,6 @@
     "named": false
   },
   {
-    "type": "//?",
-    "named": false
-  },
-  {
     "type": "/=",
     "named": false
   },
@@ -2963,7 +2963,15 @@
     "named": false
   },
   {
+    "type": "?//",
+    "named": false
+  },
+  {
     "type": "[",
+    "named": false
+  },
+  {
+    "type": "\\(",
     "named": false
   },
   {

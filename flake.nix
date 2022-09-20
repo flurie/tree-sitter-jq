@@ -9,9 +9,9 @@
         devShell = with pkgs; mkShell {
           buildInputs = [
             nodePackages.npm
-            nodePackages.typescript-language-server
             nodePackages.vscode-json-languageserver
             tree-sitter
+            deno
           ];
         };
       }

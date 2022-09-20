@@ -46,9 +46,9 @@ module.exports = grammar({
           "as",
           $._tokIdentVariable,
           optional($.constobject),
-          ";"
+          ";",
         ),
-        seq("include", $.string, optional($.constobject), ";")
+        seq("include", $.string, optional($.constobject), ";"),
       ),
 
     funcdef: ($) =>
@@ -65,11 +65,11 @@ module.exports = grammar({
           prec(PREC.FUNCDEF_TERM, seq($.funcdef, $.query)),
           field(
             "chained_query",
-            prec(PREC.FUNCDEF_TERM, seq($.query, "|", $.query))
+            prec(PREC.FUNCDEF_TERM, seq($.query, "|", $.query)),
           ),
           field(
             "chained_binding",
-            prec(PREC.DOT, seq($.binding, "|", $.query))
+            prec(PREC.DOT, seq($.binding, "|", $.query)),
           ),
           field(
             "reduce",
@@ -84,9 +84,9 @@ module.exports = grammar({
                 $.query,
                 ";",
                 $.query,
-                ")"
-              )
-            )
+                ")",
+              ),
+            ),
           ),
           field(
             "foreach_1",
@@ -101,9 +101,9 @@ module.exports = grammar({
                 $.query,
                 ";",
                 $.query,
-                ")"
-              )
-            )
+                ")",
+              ),
+            ),
           ),
           field(
             "foreach_2",
@@ -120,9 +120,9 @@ module.exports = grammar({
                 $.query,
                 ";",
                 $.query,
-                ")"
-              )
-            )
+                ")",
+              ),
+            ),
           ),
           field(
             "if_statement",
@@ -133,62 +133,65 @@ module.exports = grammar({
               $.query,
               repeat($.elif),
               optional($.else),
-              "end"
-            )
+              "end",
+            ),
           ),
           field(
             "try_catch",
             seq(
               prec(PREC.SQUARE, "try"),
               $.query,
-              prec(PREC.DOT, optional($.catch))
-            )
+              prec(PREC.DOT, optional($.catch)),
+            ),
           ),
           field("label", seq("label", $.variable, "|", $.query)),
           field("optional", prec(PREC.SQUARE, seq($.query, "?"))),
           field(
             "comma_sep_query",
-            prec.left(PREC.COMMA, seq($.query, ",", $.query))
+            prec.left(PREC.COMMA, seq($.query, ",", $.query)),
           ),
           field(
             "alternative",
-            prec(PREC.TOKALTOP, seq($.query, "//", $.query))
+            prec(PREC.TOKALTOP, seq($.query, "//", $.query)),
           ),
           field("update", seq($.query, $._tokUpdateOp, $.query)),
           field(
             "boolean_or",
-            prec.left(PREC.TOKOROP, seq($.query, "or", $.query))
+            prec.left(PREC.TOKOROP, seq($.query, "or", $.query)),
           ),
           field("boolean_and", seq($.query, "and", $.query)),
           field("compare", seq($.query, $._tokCompareOp, $.query)),
           field(
             "math",
-            prec.left(PREC.MATH_LOW, seq($.query, $._tokMathLow, $.query))
+            prec.left(PREC.MATH_LOW, seq($.query, $._tokMathLow, $.query)),
           ),
           field(
             "math",
-            prec.left(PREC.MATH_HIGH, seq($.query, $._tokMathHigh, $.query))
+            prec.left(PREC.MATH_HIGH, seq($.query, $._tokMathHigh, $.query)),
           ),
-          field("term", prec(PREC.FUNCDEF_TERM, $._term))
-        )
+          field("term", prec(PREC.FUNCDEF_TERM, $._term)),
+        ),
       ),
 
     binding: ($) => seq($._term, "as", $._bindpatterns),
-    _bindpatterns: ($) => seq($._pattern, repeat(seq("//?", $._pattern))),
+    _bindpatterns: ($) => seq($._pattern, repeat(seq("?//", $._pattern))),
     _pattern: ($) =>
       choice(
-        seq($.variable),
+        $.variable,
         seq("[", $.arraypatterns, "]"),
-        seq("{", $.objectpatterns, "}")
+        seq("{", $.objectpatterns, "}"),
       ),
     arraypatterns: ($) => seq($._pattern, repeat(seq(",", $._pattern))),
     objectpatterns: ($) =>
       seq($.objectpattern, repeat(seq(",", $.objectpattern))),
     objectpattern: ($) =>
-      seq(
-        choice($.objectkey, $.string, seq("(", $.query, ")")),
-        ":",
-        $._pattern
+      choice(
+        seq(
+          choice($.objectkey, $.string, seq("(", $.query, ")")),
+          ":",
+          $._pattern,
+        ),
+        $.variable,
       ),
     _term: ($) =>
       choice(
@@ -218,7 +221,7 @@ module.exports = grammar({
         prec(PREC.SQUARE, seq($._term, $.suffix)),
         seq($._term, "?"),
         prec(PREC.SQUARE, seq($._term, ".", $.suffix)),
-        seq($._term, ".", $.string)
+        seq($._term, ".", $.string),
       ),
 
     funcname: ($) => $._IDENT,
@@ -229,7 +232,7 @@ module.exports = grammar({
         seq("[", $.query, "]"),
         seq("[", $.query, ":", "]"),
         seq("[", ":", $.query, "]"),
-        seq("[", $.query, ":", $.query, "]")
+        seq("[", $.query, ":", $.query, "]"),
       ),
 
     args: ($) => choice($.query, seq($.args, ";", $.query)),
@@ -249,7 +252,7 @@ module.exports = grammar({
         seq($.string, ":", $.objectval),
         seq("(", $.query, ")", ":", $.objectval),
         $.objectkey,
-        $.string
+        $.string,
       ),
 
     objectkey: ($) => choice($.identifier, $.variable, $.keyword),
@@ -264,16 +267,16 @@ module.exports = grammar({
         $.string,
         "null",
         "true",
-        "false"
+        "false",
       ),
 
     constobject: ($) =>
       seq(
         "{",
         optional(
-          seq($.constobjectkeyval, repeat(seq(",", $.constobjectkeyval)))
+          seq($.constobjectkeyval, repeat(seq(",", $.constobjectkeyval))),
         ),
-        "}"
+        "}",
       ),
 
     constobjectkeyval: ($) =>
@@ -328,7 +331,11 @@ module.exports = grammar({
     //     choice(hex_literal, decimal_literal, binary_literal, octal_literal),
     //   );
     // },
-    _QQSTRING: ($) => choice(seq('"', '"'), seq('"', $._string_content, '"')),
+    _QQSTRING: ($) => choice(seq('"', '"'), seq('"', $._inner_string, '"')),
+    _inner_string: ($) =>
+      repeat1(
+        prec.right(choice($._string_content, seq("\\\(", $.query, "\)"))),
+      ),
     _string_content: ($) =>
       repeat1(choice(token.immediate(/[^\\"\n]+/), $._escape_sequence)),
 
