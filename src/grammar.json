@@ -2030,7 +2030,7 @@
     "_inner_string": {
       "type": "REPEAT1",
       "content": {
-        "type": "PREC_RIGHT",
+        "type": "PREC_LEFT",
         "value": 0,
         "content": {
           "type": "CHOICE",
@@ -2040,25 +2040,29 @@
               "name": "_string_content"
             },
             {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": "\\("
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "query"
-                },
-                {
-                  "type": "STRING",
-                  "value": ")"
-                }
-              ]
+              "type": "SYMBOL",
+              "name": "string_interp"
             }
           ]
         }
       }
+    },
+    "string_interp": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "\\("
+        },
+        {
+          "type": "SYMBOL",
+          "name": "query"
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
     },
     "_string_content": {
       "type": "REPEAT1",

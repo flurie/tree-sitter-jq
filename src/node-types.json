@@ -2833,6 +2833,21 @@
           "named": true
         },
         {
+          "type": "string_interp",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "string_interp",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
           "type": "query",
           "named": true
         }

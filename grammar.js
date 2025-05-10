@@ -333,9 +333,8 @@ module.exports = grammar({
     // },
     _QQSTRING: ($) => choice(seq('"', '"'), seq('"', $._inner_string, '"')),
     _inner_string: ($) =>
-      repeat1(
-        prec.right(choice($._string_content, seq("\\\(", $.query, "\)"))),
-      ),
+      repeat1(prec.left(choice($._string_content, $.string_interp))),
+    string_interp: ($) => seq("\\\(", $.query, "\)"),
     _string_content: ($) =>
       repeat1(choice(token.immediate(/[^\\"\n]+/), $._escape_sequence)),
 
