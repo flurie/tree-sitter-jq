@@ -341,6 +341,6 @@ module.exports = grammar({
     _escape_sequence: ($) =>
       token.immediate(seq("\\", /(\"|\\|\/|b|f|n|r|t|u)/)),
     _IDENT: ($) => /([a-zA-Z_][a-zA-Z_0-9]*::)*[a-zA-Z_][a-zA-Z_0-9]*/,
-    comment: ($) => token(prec(-10, /#.*/)),
+    comment: ($) => token(prec(-10, /#(.|\\\n)*/)),
   },
 });
