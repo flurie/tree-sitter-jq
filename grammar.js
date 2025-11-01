@@ -336,7 +336,7 @@ module.exports = grammar({
       repeat1(prec.left(choice($._string_content, $.string_interp))),
     string_interp: ($) => seq("\\\(", $.query, "\)"),
     _string_content: ($) =>
-      repeat1(choice(token.immediate(/[^\\"\n]+/), $._escape_sequence)),
+      repeat1(choice(token.immediate(/[^\\"]+/), $._escape_sequence)),
 
     _escape_sequence: ($) =>
       token.immediate(seq("\\", /(\"|\\|\/|b|f|n|r|t|u)/)),
