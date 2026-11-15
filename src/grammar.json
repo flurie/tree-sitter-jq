@@ -1311,17 +1311,21 @@
           }
         },
         {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "_term"
-            },
-            {
-              "type": "STRING",
-              "value": "?"
-            }
-          ]
+          "type": "PREC",
+          "value": 13,
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_term"
+              },
+              {
+                "type": "STRING",
+                "value": "?"
+              }
+            ]
+          }
         },
         {
           "type": "PREC",

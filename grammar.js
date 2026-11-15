@@ -219,7 +219,7 @@ module.exports = grammar({
         field("break_statement", seq("break", $.variable)),
         field("term_with_object_access", seq($._term, $.index)),
         prec(PREC.SQUARE, seq($._term, $.suffix)),
-        seq($._term, "?"),
+        prec(PREC.SQUARE + 1, seq($._term, "?")),
         prec(PREC.SQUARE, seq($._term, ".", $.suffix)),
         seq($._term, ".", $.string),
       ),
