@@ -296,7 +296,7 @@ module.exports = grammar({
     _tokUpdateOp: ($) => choice("|=", "+=", "-=", "*=", "/=", "//=", "%=", "="),
     _tokCompareOp: ($) => choice("==", "!=", ">=", "<=", ">", "<"),
     format: ($) => /@[a-zA-Z0-9_]+/,
-    index: ($) => seq(".", $.identifier),
+    index: ($) => seq(".", choice($.identifier, alias($.keyword, $.identifier))),
     number: ($) => /([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][+-]?[0-9]+)?/,
     // NOTE: this stuff comes from the json BNF, which may or may not be worth implementing
 
