@@ -65,11 +65,11 @@ module.exports = grammar({
           prec(PREC.FUNCDEF_TERM, seq($.funcdef, $.query)),
           field(
             "chained_query",
-            prec(PREC.FUNCDEF_TERM, seq($.query, "|", $.query)),
+            prec.right(PREC.PIPE, seq($.query, "|", $.query)),
           ),
           field(
             "chained_binding",
-            prec(PREC.DOT, seq($.binding, "|", $.query)),
+            prec.right(PREC.PIPE, seq($.binding, "|", $.query)),
           ),
           field(
             "reduce",
@@ -144,7 +144,7 @@ module.exports = grammar({
               prec(PREC.DOT, optional($.catch)),
             ),
           ),
-          field("label", seq("label", $.variable, "|", $.query)),
+          field("label", prec.right(PREC.PIPE, seq("label", $.variable, "|", $.query))),
           field("optional", prec(PREC.SQUARE, seq($.query, "?"))),
           field(
             "comma_sep_query",
@@ -152,15 +152,15 @@ module.exports = grammar({
           ),
           field(
             "alternative",
-            prec(PREC.TOKALTOP, seq($.query, "//", $.query)),
+            prec.right(PREC.TOKALTOP, seq($.query, "//", $.query)),
           ),
-          field("update", seq($.query, $._tokUpdateOp, $.query)),
+          field("update", prec.right(PREC.TOKUPDATEOP, seq($.query, $._tokUpdateOp, $.query))),
           field(
             "boolean_or",
             prec.left(PREC.TOKOROP, seq($.query, "or", $.query)),
           ),
-          field("boolean_and", seq($.query, "and", $.query)),
-          field("compare", seq($.query, $._tokCompareOp, $.query)),
+          field("boolean_and", prec.left(PREC.TOKANDOP, seq($.query, "and", $.query))),
+          field("compare", prec.left(PREC.TOKCOMPAREOP, seq($.query, $._tokCompareOp, $.query))),
           field(
             "math",
             prec.left(PREC.MATH_LOW, seq($.query, $._tokMathLow, $.query)),
