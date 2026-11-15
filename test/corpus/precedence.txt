@@ -1,0 +1,209 @@
+================================================================================
+pipe is right associative
+================================================================================
+
+.a | .b | .c
+
+---
+
+(program
+  (programbody
+    (query
+      chained_query: (query
+        term: (index
+          (identifier)))
+      chained_query: (query
+        chained_query: (query
+          term: (index
+            (identifier)))
+        chained_query: (query
+          term: (index
+            (identifier)))))))
+
+================================================================================
+comma binds tighter than pipe
+================================================================================
+
+1, 2 | 3
+
+---
+
+(program
+  (programbody
+    (query
+      chained_query: (query
+        comma_sep_query: (query
+          term: (number))
+        comma_sep_query: (query
+          term: (number)))
+      chained_query: (query
+        term: (number)))))
+
+================================================================================
+alternative is right associative
+================================================================================
+
+.a // .b // .c
+
+---
+
+(program
+  (programbody
+    (query
+      alternative: (query
+        term: (index
+          (identifier)))
+      alternative: (query
+        alternative: (query
+          term: (index
+            (identifier)))
+        alternative: (query
+          term: (index
+            (identifier)))))))
+
+================================================================================
+comparison binds tighter than alternative
+================================================================================
+
+.a // .b == 1
+
+---
+
+(program
+  (programbody
+    (query
+      alternative: (query
+        term: (index
+          (identifier)))
+      alternative: (query
+        compare: (query
+          term: (index
+            (identifier)))
+        compare: (query
+          term: (number))))))
+
+================================================================================
+update binds tighter than pipe
+================================================================================
+
+.a = 1 | .b
+
+---
+
+(program
+  (programbody
+    (query
+      chained_query: (query
+        update: (query
+          term: (index
+            (identifier)))
+        update: (query
+          term: (number)))
+      chained_query: (query
+        term: (index
+          (identifier))))))
+
+================================================================================
+update right-hand side includes arithmetic
+================================================================================
+
+.a |= . + 1
+
+---
+
+(program
+  (programbody
+    (query
+      update: (query
+        term: (index
+          (identifier)))
+      update: (query
+        math: (query)
+        math: (query
+          term: (number))))))
+
+================================================================================
+and binds tighter than or
+================================================================================
+
+.a or .b and .c
+
+---
+
+(program
+  (programbody
+    (query
+      boolean_or: (query
+        term: (index
+          (identifier)))
+      boolean_or: (query
+        boolean_and: (query
+          term: (index
+            (identifier)))
+        boolean_and: (query
+          term: (index
+            (identifier)))))))
+
+================================================================================
+comparison binds tighter than and
+================================================================================
+
+.a == 1 and .b != 2
+
+---
+
+(program
+  (programbody
+    (query
+      boolean_and: (query
+        compare: (query
+          term: (index
+            (identifier)))
+        compare: (query
+          term: (number)))
+      boolean_and: (query
+        compare: (query
+          term: (index
+            (identifier)))
+        compare: (query
+          term: (number))))))
+
+================================================================================
+binding scopes over the rest of the pipeline
+================================================================================
+
+. as $x | .a | $x
+
+---
+
+(program
+  (programbody
+    (query
+      chained_binding: (binding
+        (variable))
+      chained_binding: (query
+        chained_query: (query
+          term: (index
+            (identifier)))
+        chained_query: (query
+          term: (variable))))))
+
+================================================================================
+label scopes over the rest of the pipeline
+================================================================================
+
+label $out | .a | break $out
+
+---
+
+(program
+  (programbody
+    (query
+      label: (variable)
+      label: (query
+        chained_query: (query
+          term: (index
+            (identifier)))
+        chained_query: (query
+          break_statement: (variable))))))
+

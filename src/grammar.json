@@ -249,8 +249,8 @@
             "type": "FIELD",
             "name": "chained_query",
             "content": {
-              "type": "PREC",
-              "value": 1,
+              "type": "PREC_RIGHT",
+              "value": 2,
               "content": {
                 "type": "SEQ",
                 "members": [
@@ -274,8 +274,8 @@
             "type": "FIELD",
             "name": "chained_binding",
             "content": {
-              "type": "PREC",
-              "value": 11,
+              "type": "PREC_RIGHT",
+              "value": 2,
               "content": {
                 "type": "SEQ",
                 "members": [
@@ -539,25 +539,29 @@
             "type": "FIELD",
             "name": "label",
             "content": {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "STRING",
-                  "value": "label"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "variable"
-                },
-                {
-                  "type": "STRING",
-                  "value": "|"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "query"
-                }
-              ]
+              "type": "PREC_RIGHT",
+              "value": 2,
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": "label"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "variable"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "|"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "query"
+                  }
+                ]
+              }
             }
           },
           {
@@ -610,7 +614,7 @@
             "type": "FIELD",
             "name": "alternative",
             "content": {
-              "type": "PREC",
+              "type": "PREC_RIGHT",
               "value": 4,
               "content": {
                 "type": "SEQ",
@@ -635,21 +639,25 @@
             "type": "FIELD",
             "name": "update",
             "content": {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "query"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "_tokUpdateOp"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "query"
-                }
-              ]
+              "type": "PREC_RIGHT",
+              "value": 5,
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "query"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "_tokUpdateOp"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "query"
+                  }
+                ]
+              }
             }
           },
           {
@@ -681,42 +689,50 @@
             "type": "FIELD",
             "name": "boolean_and",
             "content": {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "query"
-                },
-                {
-                  "type": "STRING",
-                  "value": "and"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "query"
-                }
-              ]
+              "type": "PREC_LEFT",
+              "value": 7,
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "query"
+                  },
+                  {
+                    "type": "STRING",
+                    "value": "and"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "query"
+                  }
+                ]
+              }
             }
           },
           {
             "type": "FIELD",
             "name": "compare",
             "content": {
-              "type": "SEQ",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "query"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "_tokCompareOp"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "query"
-                }
-              ]
+              "type": "PREC_LEFT",
+              "value": 8,
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "query"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "_tokCompareOp"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "query"
+                  }
+                ]
+              }
             }
           },
           {
@@ -1311,17 +1327,21 @@
           }
         },
         {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "_term"
-            },
-            {
-              "type": "STRING",
-              "value": "?"
-            }
-          ]
+          "type": "PREC",
+          "value": 13,
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "_term"
+              },
+              {
+                "type": "STRING",
+                "value": "?"
+              }
+            ]
+          }
         },
         {
           "type": "PREC",
@@ -1973,7 +1993,7 @@
     },
     "format": {
       "type": "PATTERN",
-      "value": "\"@\"[a-zA-Z0-9_]+"
+      "value": "@[a-zA-Z0-9_]+"
     },
     "index": {
       "type": "SEQ",
@@ -1983,14 +2003,28 @@
           "value": "."
         },
         {
-          "type": "SYMBOL",
-          "name": "identifier"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "identifier"
+            },
+            {
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "keyword"
+              },
+              "named": true,
+              "value": "identifier"
+            }
+          ]
         }
       ]
     },
     "number": {
       "type": "PATTERN",
-      "value": "[\\+\\-]?[0-9]+"
+      "value": "([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([eE][+-]?[0-9]+)?"
     },
     "_QQSTRING": {
       "type": "CHOICE",

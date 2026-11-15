@@ -1,0 +1,65 @@
+================================================================================
+keyword as field name
+================================================================================
+
+.label
+
+---
+
+(program
+  (programbody
+    (query
+      term: (index
+        (identifier)))))
+
+================================================================================
+keyword field in chain
+================================================================================
+
+.a.end
+
+---
+
+(program
+  (programbody
+    (query
+      term_with_object_access: (index
+        (identifier))
+      term_with_object_access: (index
+        (identifier)))))
+
+================================================================================
+keyword field in pipeline
+================================================================================
+
+.if | .then
+
+---
+
+(program
+  (programbody
+    (query
+      chained_query: (query
+        term: (index
+          (identifier)))
+      chained_query: (query
+        term: (index
+          (identifier))))))
+
+================================================================================
+keyword field compared
+================================================================================
+
+.reduce == 1
+
+---
+
+(program
+  (programbody
+    (query
+      compare: (query
+        term: (index
+          (identifier)))
+      compare: (query
+        term: (number)))))
+
